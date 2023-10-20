@@ -1,68 +1,65 @@
 from flask import Flask, request
+from flask_smorest import abort
+import uuid
 from typing import Tuple, Optional
-import helper
+from helper import check_create_store_payload, check_create_item_payload
 from collections import OrderedDict
 import json
+from db import stores, items
 
 app = Flask(__name__)
 
-stores = {
-    "stores": [
-        {
-            "items": [
-                {
-                    "name": "chair",
-                    "price": 15.99
-                }
-            ],
-            "name": "My Store"
-        }
-    ]
-}
-
 
 @app.route("/stores", methods=["GET"])
-def get_all_stores() -> Optional[Tuple[dict, int] or None]:
-    try:
-        return stores, 200
-    except SyntaxError:
-        return "Something wrong happened", 400
+def get_all_stores() -> Tuple[dict, int]:
+    return stores, 200
 
 
 @app.route("/store", methods=["POST"])
-def create_store() -> Optional[Tuple[dict, int] or None]:
-    try:
-        #1 get data from requests
-        body = request.get_json()
-        new_store = {"name": body['name'], "items": []}
-        stores['stores'].append(new_store)
-        return new_store, 201
-    except SyntaxError:
-        return {"message":"Something wrong happened"}, 400
-
+def create_store() -> Tuple[dict, int]:
+    store_id = uuid.uuid4().hex
+    store_data = request.get_json()
+    store_data_check = check_create_store_payload(**store_data)
+    if store_data_check:
+        store = {**store_data, "store_id": store_id}
+        stores[store_id] = store
+        return store, 200
+    else:
+        abort(400, message="missing required field store name")
 
 # store name is passed in as parameter data
-@app.route("/store/<string:store_name>", methods=["POST"])
-def create_items(store_name) -> Optional[Tuple[str, int] or None]:
-    store_exists, store_position = helper.store_exists(store_name, stores['stores'])
-    if store_exists:
-        items_data = request.get_json()
-        stores['stores'][store_position]['items'].append(items_data)
-        return stores, 201
-    return {"message": "store not found"}, 400
 
 
-@app.route("/store/<string:store_name>/items", methods=["GET"])
-def get_items_by_store(store_name) -> [dict]:
-    store_exists, store_position = helper.store_exists(store_name, stores['stores'])
-    if store_exists:
-        return {
-            "message": "Successful",
-            "items": stores['stores'][store_position]['items']}, 200
+@app.route("/items", methods=["POST"])
+def create_items() -> Optional[Tuple[dict, int] or None]:
+    data = request.get_json()
+    item_data_check = check_create_item_payload(**data)
+    if not item_data_check:
+        abort(400, message="required fields are incorrect or missing")
     else:
-        return {"message": "store does not exist"}, 404
+        item_id = uuid.uuid4().hex
+        store_id = data.get("store_id")
+        item = {**data, "store_id": store_id, "id": item_id}
+        try:
+            items["items"].append(item)
+        except KeyError:
+            items["items"] = [item]
+        return item, 200
 
+
+@app.route("/stores/<string:store_id>/items", methods=["GET"])
+def get_items_by_store(store_id) -> [dict]:
+    if store_id not in stores:
+        return {"message": "store not found"}, 404
+    else:
+        return items[store_id], 200
+
+
+@app.route("/items", methods=["GET"])
+def get_all_items():
+    return list(items.values()), 200
 
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
+
