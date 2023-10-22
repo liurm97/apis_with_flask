@@ -43,13 +43,65 @@ def check_create_item_payload(**kwargs: dict) -> bool:
     if "price" not in kwargs:
         return False
 
-    if type(kwargs["store_id"]) != str:
+    if type(kwargs["store_id"]) is not str:
         return False
 
-    if type(kwargs["name"]) != str:
+    if type(kwargs["name"]) is not str:
         return False
 
-    if type(kwargs["price"]) != float:
+    if type(kwargs["price"]) is not float:
+        return False
+
+    return True
+
+def check_delete_item_payload(**kwargs: dict) -> bool:
+    """
+    items payload must have 2 keys:
+    1) store_id: str
+    2) id (item): str
+    """
+    if len(kwargs.keys()) > 2:
+        return False
+
+    if "store_id" not in kwargs:
+        return False
+
+    if "id" not in kwargs:
+        return False
+
+    if type(kwargs["store_id"]) is not str:
+        return False
+
+    if type(kwargs["id"]) is not str:
+        return False
+
+    return True
+
+def check_patch_item_payload(**kwargs: dict) -> bool:
+    """
+    items payload must have 2 keys:
+    1) store_id: str
+    2) id (item): str
+    """
+    if len(kwargs.keys()) > 4:
+        return False
+
+    if "store_id" not in kwargs:
+        return False
+
+    if "id" not in kwargs:
+        return False
+
+    if "price" not in kwargs:
+        return False
+
+    if type(kwargs["store_id"]) is not str:
+        return False
+
+    if type(kwargs["id"]) is not str:
+        return False
+
+    if type(kwargs["price"]) is not float:
         return False
 
     return True
