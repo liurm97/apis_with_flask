@@ -105,3 +105,10 @@ def check_patch_item_payload(**kwargs: dict) -> bool:
         return False
 
     return True
+
+
+def check_store_exists(store_id, stores: List[dict]) -> bool:
+    for store in stores:
+        if store["store_id"] == store_id:
+            return True
+    return False

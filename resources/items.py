@@ -4,10 +4,11 @@ from flask_smorest import abort, Blueprint
 import uuid
 from typing import Tuple, Optional
 from helper import (check_create_store_payload, check_create_item_payload,
-                    check_delete_item_payload, check_patch_item_payload)
+                    check_delete_item_payload, check_patch_item_payload, check_store_exists)
 from collections import OrderedDict
 import json
 from db import items, stores
+from schemas import ItemSchema
 
 # define a blueprint for stores Api action
 bp = Blueprint("items", __name__, description="Item's API actions")
@@ -16,40 +17,36 @@ bp = Blueprint("items", __name__, description="Item's API actions")
 # 4 GET ALL ITEMS IN A STORE
 @bp.route("/items/<string:store_id>")
 class Item(MethodView):
-    def get(self,store_id) -> [dict]:
-        print(store_id)
-        if store_id not in stores:
-            return {"message": "store not found"}, 404
+    @bp.arguments(ItemSchema)
+    @bp.response(202, ItemSchema(many=True))
+    def get(self, store_id) -> [dict]:
+        # check store_id is in items
+        if store_id["store_id"] not in items:
+            abort(404, message="Store not found")
         else:
-            print(items)
             return items[store_id], 200
 
 
 # 5 GET ALL ITEMS
 @bp.route("/items")
 class Item(MethodView):
+    @bp.response(200, ItemSchema(many=True))
     def get(self):
         print(items)
-        return items, 200
+        return items["results"], 200
 
 # 6 ADD AN ITEM TO A STORE
-    def post(self) -> Optional[Tuple[dict, int] or None]:
-        data = request.get_json()
-        item_data_check = check_create_item_payload(**data)
-        if not item_data_check:
-            abort(400, message="required fields are incorrect or missing")
-        else:
-            item_id = uuid.uuid4().hex
-            store_id = data.get("store_id")
-            item = {**data, "id": item_id}
-            try:
-                # append data into an existing list
-                data = {"id": item_id, "name": data["name"], "price": data["price"]}
-                items[store_id].append(data)
-            except KeyError:
-                # wrap data into list if there is no list
-                items[store_id] = [data]
-            return item, 200
+    @bp.arguments(ItemSchema)
+    def post(self, item_data) -> Optional[Tuple[dict, int] or None]:
+        store_exists = check_store_exists(item_data["store_id"], stores["results"])
+        if not store_exists:
+            abort(404, message="Store not found")
+        item_id = uuid.uuid4().hex
+        store_id = item_data.get("store_id")
+        item = {**item_data, "id": item_id}
+        data = {"id": item_id, **item_data}
+        items["results"].append(data)
+        return item, 200
 
 # 7 DELETE AN ITEM FROM A STORE
     def delete(self):

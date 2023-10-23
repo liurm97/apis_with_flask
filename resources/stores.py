@@ -8,6 +8,8 @@ from helper import (check_create_store_payload, check_create_item_payload,
 from collections import OrderedDict
 import json
 from db import stores
+import pandas as pd
+from schemas import StoreSchema
 
 # define a blueprint for stores Api action
 bp = Blueprint("stores", __name__, description="Store's API actions")
@@ -16,20 +18,18 @@ bp = Blueprint("stores", __name__, description="Store's API actions")
 # connect to /stores endpoint
 @bp.route("/stores")
 class Store(MethodView):
+    @bp.response(200, StoreSchema(many=True)) # [List] returns many instances of StoreSchema
     def get(self) -> Tuple[dict, int]:
-        print(f"TTHERE YOU GOOOOO Stores:{stores}")
-        return stores, 200
+        return stores["results"], 200
 
-    def post(self) -> Tuple[dict, int]:
+    @bp.arguments(StoreSchema) # Validates request body
+    def post(self, store_data) -> Tuple[dict, int]:
+        # store_data = request.get_json()
+        print(f"After passing through Schema: {store_data}")
         store_id = uuid.uuid4().hex
-        store_data = request.get_json()
-        store_data_check = check_create_store_payload(**store_data)
-        if store_data_check:
-            store = {**store_data, "store_id": store_id}
-            stores[store_id] = store_data
-            return stores, 200
-        else:
-            abort(400, message="missing required field store name.")
+        store = {**store_data, "store_id": store_id}
+        stores["results"].append(store)
+        return stores, 200
 
 
 @bp.route("/stores/<string:store_id>")
