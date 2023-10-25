@@ -3,4 +3,4 @@ flask-smorest
 python-dotenv
 pandas
 sqlalchemy
-flask-alchemy
+flask-sqlalchemy
