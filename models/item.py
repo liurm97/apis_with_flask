@@ -7,4 +7,4 @@ class ItemModel(db.Model):
     price = db.Column(db.Float, nullable=False)
     store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), unique=True)
     # Nested Store obj
-    store = db.relationship("StoreModel", back_populate="items")
+    store = db.relationship("StoreModel", back_populates="items")

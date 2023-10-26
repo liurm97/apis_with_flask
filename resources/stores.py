@@ -7,9 +7,9 @@ from helper import (check_create_store_payload, check_create_item_payload,
                     check_delete_item_payload, check_patch_item_payload)
 from collections import OrderedDict
 import json
-from db import stores
+# from db import stores
 import pandas as pd
-from schemas import StoreSchema
+from schemas import PlainItemSchema, PlainStoreSchema, StoreSchema, ItemSchema
 
 # define a blueprint for stores Api action
 bp = Blueprint("stores", __name__, description="Store's API actions")
@@ -18,7 +18,7 @@ bp = Blueprint("stores", __name__, description="Store's API actions")
 # connect to /stores endpoint
 @bp.route("/stores")
 class Store(MethodView):
-    @bp.response(200, StoreSchema(many=True)) # [List] returns many instances of StoreSchema
+    @bp.response(200, PlainStoreSchema(many=True)) # [List] returns many instances of StoreSchema
     def get(self) -> Tuple[dict, int]:
         return stores["results"], 200
 

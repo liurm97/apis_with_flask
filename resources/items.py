@@ -7,7 +7,7 @@ from helper import (check_create_store_payload, check_create_item_payload,
                     check_delete_item_payload, check_patch_item_payload, check_store_exists)
 from collections import OrderedDict
 import json
-from db import items, stores
+# from db import items, stores
 from schemas import ItemSchema
 
 # define a blueprint for stores Api action
