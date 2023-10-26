@@ -6,4 +6,5 @@ class ItemModel(db.Model):
     name = db.Column(db.String(80), nullable=False, unique=True)
     price = db.Column(db.Float, nullable=False)
     store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), unique=True)
-    store = db.relationship("ClassModel", back_populate=True)
+    # Nested Store obj
+    store = db.relationship("StoreModel", back_populate="items")
